@@ -1,0 +1,174 @@
+MariaDB [(none)]> create database Industry;
+
+Q7.24
+MariaDB [Industry]> create table Employee(empNo varchar(50) PRIMARY KEY, fName varchar(20),lName varchar(20), address varchar(40),DOB date, sex char(1) CHECK( SEX IN('M','F')), position varchar(50) CHECK(POSITION IN('Manager','Team Leader','Analyst','Software Developer')),deptNo varchar(10));
+
+
+MariaDB [Industry]> create table Department(deptNo varchar(10) PRIMARY KEY, deptName varchar(50),mgrEmpNo varchar(50), FOREIGN KEY(mgrEmpNo)REFERENCES Employee(empNo));
+
+MariaDB [Industry]> Alter table Employee add foreign key(deptNo)references department(deptNo);
+
+MariaDB [Industry]> create table Project(projNo varchar(50) primary key, projName varchar(50),deptNo varchar(10),foreign key(deptNo) references 
+department(deptNo));
+
+MariaDB [Industry]> create table WorksOn(empNo varchar(50),projNo varchar(50), dateWorked date, hoursWorked decimal(4,2) check ( hoursWorked between 0 and 40));
+MariaDB [industry]> insert into department values
+    -> ('D001','Administration',NULL),
+    -> ('D002','Human Resource',NULL),
+    -> ('D003','Finance',NULL),
+    -> ('D004','Sales',NULL),
+    -> ('D005','IT',NULL);
+Query OK, 5 rows affected (0.031 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+
+MariaDB [industry]> insert into employee values
+    -> ('E001', 'John', 'Mensah', '12 Ring Road, Accra', '1995-04-15', 'M', 'Manager', 'D001'),
+    -> ('E002', 'Ama', 'Owusu', '45 High Street, Kumasi', '1998-09-23', 'F', 'Team Leader', 'D002'),
+    -> ('E003', 'Kwame', 'Asante', '18 Liberation Road, Accra', '1992-11-08', 'M', 'Analyst', 'D003'),
+    -> ('E004', 'Abena', 'Boateng', '7 Oxford Street, Takoradi', '1997-06-30', 'F', 'Software Developer', 'D004'),
+    -> ('E005', 'Kojo', 'Antwi', '25 Adenta Road, Accra', '1990-01-17', 'M', 'Manager', 'D005');
+Query OK, 5 rows affected (0.029 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+
+MariaDB [industry]> update department set mgrEmpNo = 'E001'where deptNo = 'D001';
+Query OK, 1 row affected (0.034 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+MariaDB [industry]> update department set mgrEmpNo = 'E002'where deptNo = 'D002';
+Query OK, 1 row affected (0.027 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+MariaDB [industry]> update department set mgrEmpNo = 'E003'where deptNo = 'D003';
+Query OK, 1 row affected (0.026 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+MariaDB [industry]> update department set mgrEmpNo = 'E004'where deptNo = 'D004';
+Query OK, 1 row affected (0.027 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+MariaDB [industry]> update department set mgrEmpNo = 'E005'where deptNo = 'D005';
+Query OK, 1 row affected (0.027 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+MariaDB [industry]> insert into project values
+    -> ('P001', 'Payroll System', 'D001'),
+    -> ('P002', 'Employee Management System', 'D002'),
+    -> ('P003', 'Budget Analysis', 'D003'),
+    -> ('P004', 'Sales Tracking System', 'D004'),
+    -> ('P005', 'Network Upgrade', 'D005');
+Query OK, 5 rows affected (0.028 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+
+MariaDB [industry]> insert into workson values
+    -> ('E001', 'P001', '2026-06-01', 8.00),
+    -> ('E001', 'P002', '2026-06-02', 6.50),
+    -> ('E002', 'P002', '2026-06-01', 7.00),
+    -> ('E002', 'P003', '2026-06-03', 8.00),
+    -> ('E003', 'P003', '2026-06-02', 5.50),
+    -> ('E003', 'P004', '2026-06-04', 7.50),
+    -> ('E004', 'P004', '2026-06-01', 8.00),
+    -> ('E004', 'P005', '2026-06-05', 6.00),
+    -> ('E005', 'P001', '2026-06-03', 7.00),
+    -> ('E005', 'P005', '2026-06-06', 8.00);
+Query OK, 10 rows affected (0.029 sec)
+Records: 10  Duplicates: 0  Warnings: 0
+
+
+
+Q7.25
+MariaDB [Industry]> create view FemaleManagedProject as select projName, projNo from project,department, employee where project.deptNo = department.deptNo and department.mgrEmpNo = employee.empNo and employee.sex = 'F' order by projNo;
+MariaDB [industry]> select * from FemaleManagedProject;
++----------------------------+--------+
+| projName                   | projNo |
++----------------------------+--------+
+| Employee Management System | P002   |
+| Sales Tracking System      | P004   |
++----------------------------+--------+
+2 rows in set (0.039 sec)
+
+Q7.26
+MariaDB [Industry]> create view EmployeeView as select employee.empNo,fName,lName,projName, hoursWorked from employee,project,workson where project.projNo = workson.projNo and employee.empNo = workson.empNo;
+
+MariaDB [industry]> select * from EmployeeView;
++-------+-------+---------+----------------------------+-------------+
+| empNo | fName | lName   | projName                   | hoursWorked |
++-------+-------+---------+----------------------------+-------------+
+| E001  | John  | Mensah  | Payroll System             |        8.00 |
+| E001  | John  | Mensah  | Employee Management System |        6.50 |
+| E002  | Ama   | Owusu   | Employee Management System |        7.00 |
+| E002  | Ama   | Owusu   | Budget Analysis            |        8.00 |
+| E003  | Kwame | Asante  | Budget Analysis            |        5.50 |
+| E003  | Kwame | Asante  | Sales Tracking System      |        7.50 |
+| E004  | Abena | Boateng | Sales Tracking System      |        8.00 |
+| E004  | Abena | Boateng | Network Upgrade            |        6.00 |
+| E005  | Kojo  | Antwi   | Payroll System             |        7.00 |
+| E005  | Kojo  | Antwi   | Network Upgrade            |        8.00 |
++-------+-------+---------+----------------------------+-------------+
+10 rows in set (0.032 sec)
+
+
+Q7.27
+MariaDB [industry]> create view EmpProject(empNo,projNo,totalHours) as select w.empNo,w.projNo, sum(hoursworked) from employee e,project p, workson w where e.empNo = w.projNo and p.projNo = w.projNo group by w.empNo, w.projNo;
+Query OK, 0 rows affected (0.038 sec)
+
+a. MariaDB [industry]> select * from EmpProject;
+MariaDB [industry]> select * from EmpProject;
++-------+--------+------------+
+| empNo | projNo | totalHours |
++-------+--------+------------+
+| E001  | P001   |       8.00 |
+| E001  | P002   |       6.50 |
+| E002  | P002   |       7.00 |
+| E002  | P003   |       8.00 |
+| E003  | P003   |       5.50 |
+| E003  | P004   |       7.50 |
+| E004  | P004   |       8.00 |
+| E004  | P005   |       6.00 |
+| E005  | P001   |       7.00 |
+| E005  | P005   |       8.00 |
++-------+--------+------------+
+10 rows in set (0.012 sec)
+
+b.MariaDB [industry]> select projNo from EmpProject where projNo = 'SCCS';
+Note: Since my database uses project numbers such as P001 instead of SCCS, I replaced 'SCCS' with 'P001' in the query to match my data.
+MariaDB [industry]> select projNo from EmpProject where projNo = 'P001';
++--------+
+| projNo |
++--------+
+| P001   |
+| P001   |
++--------+
+2 rows in set (0.010 sec)
+
+c.MariaDB [industry]> select count(projNo) from EmpProject where empNo = 'E001';
+Note: I changed 'E1' to 'E001' because my database uses employee numbers in the format E001, E002,
++---------------+
+| count(projNo) |
++---------------+
+|             2 |
++---------------+
+1 row in set (0.031 sec)
+
+d.MariaDB [industry]> select empNo, totalHours from EmpProject group by empNo;
++-------+------------+
+| empNo | totalHours |
++-------+------------+
+| E001  |       8.00 |
+| E002  |       7.00 |
+| E003  |       5.50 |
+| E004  |       8.00 |
+| E005  |       7.00 |
++-------+------------+
+5 rows in set (0.027 sec)
+
+Q7.28
+The materialized view is maintained by updating it whenever a row in the Part table is inserted, updated, or deleted. A part is added to the view if its cost becomes greater than £1000 and removed if it no longer satisfies the condition.
+
+The materialized view can be maintained without accessing the base table when a newly inserted or updated row clearly satisfies the condition partCost > 1000. However, when a qualifying row is updated or deleted, the base table must be checked to determine whether another row with the same partNo still has a cost greater than £1000.
+
+
+
+
+
+
+
